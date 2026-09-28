@@ -1,6 +1,6 @@
 const Url = require('../models/url.model');
 const { encode } = require('../utils/base62');
-const { getRedisClient } = require('../config/redis');
+const { getRedisClient } = require('../../middleware/config/redis');
 
 /**
  * URL Service
