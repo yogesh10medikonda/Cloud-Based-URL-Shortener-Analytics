@@ -1,5 +1,5 @@
 const Url = require('../models/url.model');
-const { getRedisClient } = require('../config/redis');
+const { getRedisClient } = require('../../middleware/config/redis');
 
 /**
  * Cleanup Service for Expired URLs

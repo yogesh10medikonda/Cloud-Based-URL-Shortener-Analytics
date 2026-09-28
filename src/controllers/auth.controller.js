@@ -1,5 +1,5 @@
 const User = require('../models/user.model');
-const { generateToken } = require('../config/jwt');
+const { generateToken } = require('../../middleware/config/jwt');
 
 /**
  * Email validation regex - RFC 5322 simplified

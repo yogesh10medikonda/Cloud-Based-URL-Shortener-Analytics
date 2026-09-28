@@ -5,7 +5,7 @@ const express = require("express");
 const cors = require('cors');
 
 // Import database connection function
-const { connectDB } = require('./config/db');
+const { connectDB } = require('../middleware/config/db');
 
 // Import scheduler to initialize scheduled tasks
 const { initializeScheduler } = require('./utils/scheduler');

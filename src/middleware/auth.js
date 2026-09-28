@@ -1,4 +1,4 @@
-const { verifyToken, extractTokenFromHeader } = require('../config/jwt');
+const { verifyToken, extractTokenFromHeader } = require('../../middleware/config/jwt');
 
 /**
  * Middleware to verify JWT token and attach user to request
