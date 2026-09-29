@@ -93,7 +93,7 @@ export default function Dashboard() {
                 {urls.map((url) => {
                   const expired = isExpired(url.expiresAt)
                   const shortCode = url.shortCode
-                  const backend = axios.defaults.baseURL || 'http://localhost:5000'
+                  const backend = axios.defaults.baseURL || (import.meta.env.VITE_API_URL || 'http://localhost:5000')
                   const shortUrl = `${backend.replace(/\/$/, '')}/${shortCode}`
 
                   return (
@@ -136,7 +136,7 @@ export default function Dashboard() {
             {urls.map((url) => {
               const expired = isExpired(url.expiresAt)
               const shortCode = url.shortCode
-              const backend = axios.defaults.baseURL || 'http://localhost:5000'
+              const backend = axios.defaults.baseURL || (import.meta.env.VITE_API_URL || 'http://localhost:5000')
               const shortUrl = `${backend.replace(/\/$/, '')}/${shortCode}`
 
               return (
@@ -198,3 +198,4 @@ export default function Dashboard() {
     </div>
   )
 }
+

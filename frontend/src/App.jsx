@@ -124,7 +124,7 @@ export default function App() {
       }
 
       if (body && body.shortCode) {
-        const backend = axios.defaults.baseURL || 'http://localhost:5000'
+        const backend = axios.defaults.baseURL || (import.meta.env.VITE_API_URL || 'http://localhost:5000')
         const url = `${backend.replace(/\/$/, '')}/${body.shortCode}`
         setShortUrl(url)
         try {
@@ -279,4 +279,5 @@ export default function App() {
     </div>
   )
 }
+
 
