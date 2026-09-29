@@ -1,247 +1,269 @@
-<<<<<<< HEAD
-# URL Shortener API
 
-A high-performance, scalable URL shortening service built with Node.js, MongoDB, and Redis. Implements industry best practices for caching, rate limiting, and automated cleanup.
+# Cloud-Based URL Shortener & Analytics
 
-## 🎯 Project Overview
+A full-stack URL shortening application built with **React, Node.js, Express and MongoDB**, containerized with **Docker** and deployed on **Render**.
 
-A production-ready REST API for shortening long URLs into compact, shareable links. The system handles URL creation, redirection, expiration management, and analytics tracking with optimized performance through Redis caching and efficient database indexing.
+The project combines REST API development, JWT authentication, link management, click tracking and cloud deployment. It also includes ongoing work on detailed analytics and CI/CD.
 
-## ✨ Features
+## Live Application
 
-- **URL Shortening**: Convert long URLs to short, Base62-encoded codes
-- **Smart Caching**: Redis cache-aside pattern for sub-millisecond lookups
-- **Expiration Management**: Optional TTL for temporary URLs with automated cleanup
-- **Rate Limiting**: IP-based rate limiting (100 requests/15min) to prevent abuse
-- **Click Analytics**: Track URL access counts
-- **Health Monitoring**: Health check endpoint for service monitoring
-- **Scheduled Cleanup**: Daily automated removal of expired URLs
+- **Frontend:** Add your Render Static Site URL here
+- **Backend:** Add your Render Web Service URL here
+- **Repository:** https://github.com/yogesh10medikonda/url-shortener
 
-## 🛠 Tech Stack
+## Features
 
-### Core
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **MongoDB** - Primary database (document store)
-- **Mongoose** - MongoDB ODM
+- **URL Shortening:** Convert long URLs into short, shareable links.
+- **User Authentication:** Secure signup and login using JWT.
+- **User Dashboard:** View and manage shortened URLs.
+- **Link Expiration:** Set expiration dates for generated links.
+- **Click Tracking:** Monitor the total number of visits to each link.
+- **Redis Caching:** Cache frequently accessed URLs to improve redirect performance when Redis is configured.
+- **Containerization:** Run the backend and supporting services locally using Docker Compose.
+- **Cloud Hosting:** Deploy the frontend and backend separately on Render.
 
-### Caching & Performance
-- **Redis** - In-memory cache for fast lookups
-- **Cache-Aside Pattern** - Optimized read performance
+### Analytics Extension
 
-### Security & Reliability
-- **express-rate-limit** - Rate limiting middleware
-- **node-cron** - Scheduled task execution
+Additional analytics functionality is under development and integration testing:
 
-### Utilities
-- **dotenv** - Environment variable management
-- **Base62 Encoding** - URL-safe code generation
+- Individual click records
+- Daily click statistics
+- Popular-link reporting
+- Historical analytics charts
 
-## 📡 API Endpoints
+## Technology Stack
 
-### Create Short URL
-```http
-POST /api/shorten
-Content-Type: application/json
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Vite, JavaScript |
+| Backend | Node.js, Express.js |
+| Database | MongoDB Atlas, Mongoose |
+| Authentication | JSON Web Tokens (JWT) |
+| Caching | Redis |
+| Containerization | Docker, Docker Compose |
+| Cloud Hosting | Render |
+| CI | GitHub Actions |
+| Version Control | Git, GitHub |
 
-{
-  "url": "https://example.com/very/long/url",
-  "expiresAt": "2024-12-31T23:59:59Z" // optional
-}
+## System Architecture
+
+```text
+                  User / Browser
+                        |
+                        v
+                 React Frontend
+               Render Static Site
+                        |
+                  HTTPS Requests
+                        |
+                        v
+                 Express REST API
+               Render Web Service
+                        |
+              +---------+---------+
+              |                   |
+              v                   v
+         MongoDB Atlas       Redis Cache
+         Persistent Data     When Configured
 ```
 
-**Response (200 OK)**
-```json
-{
-  "success": true,
-  "shortUrl": "http://localhost:5000/abc123",
-  "shortCode": "abc123",
-  "originalUrl": "https://example.com/very/long/url"
-}
+The React frontend communicates with the Express backend through REST APIs. MongoDB stores application data, while Redis can accelerate frequently requested redirects.
+
+## Project Structure
+
+```text
+url-shortener/
+|
+|-- frontend/
+|   |-- src/
+|   |-- package.json
+|
+|-- src/
+|   |-- controllers/
+|   |-- middleware/
+|   |-- models/
+|   |-- routes/
+|   |-- services/
+|   |-- app.js
+|
+|-- middleware/
+|   |-- config/
+|
+|-- .github/
+|   |-- workflows/
+|
+|-- Dockerfile
+|-- docker-compose.yml
+|-- package.json
+|-- README.md
 ```
 
-**Rate Limit**: 100 requests per 15 minutes per IP
-
-### Redirect to Original URL
-```http
-GET /:shortCode
-```
-
-**Response**: HTTP 302 redirect to original URL
-
-### Health Check
-```http
-GET /health
-```
-
-**Response**: `OK`
-
-## 🏗 System Design Overview
-
-### Architecture
-
-```
-Client Request
-    ↓
-Express Server (Rate Limiting)
-    ↓
-Controller Layer (Validation)
-    ↓
-Service Layer (Business Logic)
-    ↓
-Cache Layer (Redis) ←→ Database Layer (MongoDB)
-```
-
-### Key Components
-
-1. **Request Flow (Shorten)**
-   - Rate limit check → Validation → Base62 encoding → MongoDB save → Response
-
-2. **Request Flow (Redirect)**
-   - Cache lookup (Redis) → If miss: MongoDB query → Cache store → Redirect
-
-3. **Caching Strategy**
-   - **Cache-Aside Pattern**: Check Redis first, fallback to MongoDB
-   - TTL-based expiration (1 hour default, respects URL expiration)
-   - Graceful degradation if Redis unavailable
-
-4. **Code Generation**
-   - MongoDB ObjectId → Base62 encoding
-   - Guaranteed uniqueness via ObjectId
-   - No collision checking required
-
-5. **Cleanup Process**
-   - Scheduled daily at 2 AM UTC
-   - Removes expired URLs from MongoDB and Redis
-   - Batch deletion for efficiency
-
-### Database Schema
-
-```javascript
-{
-  originalUrl: String (required),
-  shortCode: String (required, unique, indexed),
-  createdAt: Date (indexed),
-  expiresAt: Date (optional, indexed),
-  clicks: Number (default: 0)
-}
-```
-
-**Indexes**:
-- `shortCode`: Unique index for fast lookups
-- `createdAt`: Index for sorting/filtering
-- `expiresAt`: Index for efficient cleanup queries
-
-## 🚀 Scalability Considerations
-
-### Performance Optimizations
-
-1. **Caching Layer**
-   - Redis reduces MongoDB load by ~90% for read operations
-   - Sub-millisecond response times for cached URLs
-   - Cache hit ratio improves with traffic
-
-2. **Database Indexing**
-   - Unique index on `shortCode` enables O(log n) lookups
-   - Indexed `expiresAt` for efficient cleanup queries
-   - Prevents full collection scans
-
-3. **Code Generation**
-   - ObjectId-based generation eliminates collision checks
-   - No distributed locking required
-   - Horizontally scalable
-
-### Horizontal Scaling
-
-- **Stateless Application**: Multiple instances can run behind load balancer
-- **Shared Redis**: Cache layer accessible to all instances
-- **MongoDB Replica Set**: Read replicas for read scaling
-- **Connection Pooling**: Mongoose handles connection management
-
-### Capacity Planning
-
-**Assumptions**:
-- Average URL length: 50 bytes
-- Cache hit rate: 80%
-- Average clicks per URL: 10
-
-**Estimated Capacity**:
-- **Storage**: ~1M URLs = ~50MB MongoDB + ~5MB Redis
-- **Throughput**: 
-  - Write: 100 req/min per IP (rate limited)
-  - Read: 10,000+ req/sec (with Redis cache)
-- **Database Load**: ~20% of total requests hit MongoDB (80% cache hits)
-
-### Future Enhancements
-
-- **CDN Integration**: Cache popular URLs at edge
-- **Database Sharding**: Partition by shortCode hash
-- **Read Replicas**: Scale read operations
-- **Message Queue**: Async click tracking
-- **Analytics Dashboard**: Real-time statistics
-- **Custom Domains**: User-specific short domains
-
-## 📦 Installation & Setup
+## Getting Started
 
 ### Prerequisites
-- Node.js (v14+)
-- MongoDB (v5+)
-- Redis (v6+)
 
-### Environment Variables
+Install the following:
 
-Create `.env` file:
+- Node.js and npm
+- Git
+- Docker Desktop (optional)
+- Access to a MongoDB database
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/yogesh10medikonda/url-shortener.git
+cd url-shortener
+```
+
+### 2. Configure Environment Variables
+
+Create a `.env` file in the project root.
+
 ```env
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/urlshortener
+NODE_ENV=development
+
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secure_jwt_secret
+
 REDIS_URL=redis://localhost:6379
 ```
 
-### Installation
+Replace the placeholder values with your own configuration.
+
+Never commit passwords, tokens or `.env` files to GitHub.
+
+### 3. Start the Backend
 
 ```bash
-# Install dependencies
 npm install
-
-# Start MongoDB and Redis services
-# (Ensure they're running before starting the app)
-
-# Start the application
-npm start
-
-# Development mode (with auto-reload)
 npm run dev
 ```
 
-## 📁 Project Structure
+The backend normally runs at:
 
-```
-src/
-├── config/          # Database and Redis configuration
-├── controllers/    # Request handlers
-├── middleware/     # Rate limiting, etc.
-├── models/         # Mongoose schemas
-├── routes/         # Express route definitions
-├── services/       # Business logic layer
-├── utils/          # Utilities (Base62, scheduler)
-└── app.js          # Application entry point
+```text
+http://localhost:5000
 ```
 
-## 🔒 Security Features
+### 4. Start the Frontend
 
-- **Rate Limiting**: Prevents abuse and DoS attacks
-- **URL Validation**: Only HTTP/HTTPS URLs accepted
-- **Input Sanitization**: Prevents injection attacks
-- **Error Handling**: No sensitive information leaked in errors
+Open a second terminal:
 
-## 📊 Monitoring & Maintenance
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- **Health Endpoint**: `/health` for service monitoring
-- **Scheduled Cleanup**: Automatic expired URL removal
-- **Error Logging**: Comprehensive error tracking
-- **Performance Metrics**: Cache hit rates, response times
+Open the local address displayed by Vite, usually:
 
-## 📝 License
+```text
+http://localhost:5173
+```
 
-ISC
-=======
+### 5. Configure the Frontend API
+
+For local development, create `frontend/.env.local`:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+For cloud deployment, set `VITE_API_URL` to the public backend URL in your hosting platform.
+
+### 6. Run with Docker
+
+With Docker Desktop running and the required environment variables configured:
+
+```bash
+docker compose up --build
+```
+
+Docker Compose starts the services defined in `docker-compose.yml`.
+
+## Cloud Deployment
+
+The application uses Render for cloud hosting and MongoDB Atlas for database storage.
+
+| Component | Deployment |
+|---|---|
+| React frontend | Render Static Site |
+| Express backend | Render Web Service |
+| Database | MongoDB Atlas |
+| Redis | Local Docker setup; hosted caching optional |
+
+### Backend Configuration
+
+The deployed backend requires environment variables such as:
+
+```text
+NODE_ENV
+MONGO_URI
+JWT_SECRET
+REDIS_URL (if hosted Redis is enabled)
+```
+
+The application should use the `PORT` environment variable supplied by its hosting platform.
+
+### Frontend Configuration
+
+Set the following variable in the Render Static Site:
+
+```text
+VITE_API_URL=https://your-backend.onrender.com
+```
+
+The production backend must also allow requests from the deployed frontend's origin through its CORS configuration.
+
+## CI/CD
+
+The repository includes work on a GitHub Actions workflow intended to:
+
+- Install backend dependencies.
+- Check JavaScript syntax.
+- Build the backend Docker image.
+- Run automatically on configured GitHub events.
+
+The workflow should be verified through the repository's GitHub Actions page.
+
+## Development and Contributions
+
+This project originated as a collaborative URL shortening application. The original core included authentication, URL shortening and link expiration.
+
+**My contributions include:**
+
+- Resolving merge conflicts and backend integration issues.
+- Fixing database, Redis and authentication configuration paths.
+- Creating the Docker and Docker Compose setup.
+- Configuring MongoDB Atlas for cloud hosting.
+- Deploying the Express backend and React frontend on Render.
+- Configuring production environment variables.
+- Developing additional click analytics functionality.
+- Working on GitHub Actions CI and production integration.
+
+The original application functionality is credited to my teammate. The subsequent development and deployment work reflects my independent contributions.
+
+## Future Improvements
+
+- Complete and verify daily and weekly analytics.
+- Add interactive analytics charts.
+- Integrate hosted Redis caching.
+- Expand automated API tests.
+- Add deployment monitoring and error reporting.
+- Implement custom domains and QR code generation.
+- Explore AWS deployment.
+
+## Author
+
+**Medikonda Yogesh Reddy**
+
+Computer and Communication Engineering student  
+Interested in Software Development and Cloud Computing
+
+GitHub: https://github.com/yogesh10medikonda
+
+## Acknowledgments
+
+Thanks to my teammate for developing the original URL shortening functionality. This project has since been extended through independent backend, DevOps, analytics and cloud deployment work.
